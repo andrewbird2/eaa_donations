@@ -1,0 +1,5 @@
+[run]
+include = eaa_donations/*
+omit = *migrations*, *tests*
+plugins =
+    django_coverage_plugin
