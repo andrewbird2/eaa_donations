@@ -1,7 +1,6 @@
 """
 Base settings to build other settings files upon.
 """
-
 import environ
 
 ROOT_DIR = environ.Path(__file__) - 3  # (eaa_donations/config/settings/base.py - 3 = eaa_donations/)
@@ -67,11 +66,12 @@ THIRD_PARTY_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'djstripe',
     'rest_framework',
 ]
 LOCAL_APPS = [
+    'eaa_donations.donations.apps.DonationsAppConfig',
     'eaa_donations.users.apps.UsersAppConfig',
-    # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -146,6 +146,7 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
 STATICFILES_DIRS = [
     str(APPS_DIR.path('static')),
+    str(ROOT_DIR.path('react/build/static')),
 ]
 # https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#staticfiles-finders
 STATICFILES_FINDERS = [
@@ -170,6 +171,7 @@ TEMPLATES = [
         # https://docs.djangoproject.com/en/dev/ref/settings/#template-dirs
         'DIRS': [
             str(APPS_DIR.path('templates')),
+            str(ROOT_DIR.path('react/build')),
         ],
         'OPTIONS': {
             # https://docs.djangoproject.com/en/dev/ref/settings/#template-debug
@@ -256,6 +258,20 @@ ACCOUNT_ADAPTER = 'eaa_donations.users.adapters.AccountAdapter'
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = 'eaa_donations.users.adapters.SocialAccountAdapter'
 
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 
-# Your stuff...
-# ------------------------------------------------------------------------------
+# STRIPE_LIVE_PUBLIC_KEY = env("STRIPE_LIVE_PUBLIC_KEY", "<your publishable key>")
+# STRIPE_LIVE_SECRET_KEY = env("STRIPE_LIVE_SECRET_KEY", "<your secret key>")
+# STRIPE_TEST_PUBLIC_KEY = env("STRIPE_TEST_PUBLIC_KEY", "pk_test_LqCqBrL45H2muETuFyi5QKRH")
+# STRIPE_TEST_SECRET_KEY = env("STRIPE_TEST_SECRET_KEY", "sk_test_ASFtCKuzcUnm3zkjl34WCGqK")
+STRIPE_TEST_PUBLIC_KEY = "pk_test_LqCqBrL45H2muETuFyi5QKRH"
+STRIPE_TEST_SECRET_KEY = "sk_test_ASFtCKuzcUnm3zkjl34WCGqK"
+STRIPE_LIVE_MODE = False
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}

@@ -40,6 +40,10 @@ raven = "==6.9.0"
 django-storages = {version = "==1.7.1", extras = ["boto3"]}
 django-anymail = {version = "==4.2", extras = ["mailgun"]}
 Collectfast = "==0.6.2"
+dj-stripe = "*"
+django-paypal = "*"
+setuptools = "*"
+django-enumfields = "*"
 
 [requires]
 python_version = "3.6"
