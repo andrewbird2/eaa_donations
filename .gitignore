@@ -337,3 +337,5 @@ pip-selfcheck.json
 eaa_donations/media/
 
 .pytest_cache/
+
+.idea/
