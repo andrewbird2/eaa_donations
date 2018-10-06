@@ -7,8 +7,9 @@ import 'react-slidedown/lib/slidedown.css'
 import StripeCheckout from "./components/StripeCheckout"
 import CurrencyInput from "./components/CurrencyInput"
 import APIService from "./services/API"
+import Result from "./Result"
 
-import {Button, Collapse, ControlLabel} from "react-bootstrap";
+import {Alert, Button, Collapse, ControlLabel} from "react-bootstrap";
 import {Elements} from 'react-stripe-elements';
 
 import PaypalExpressBtn from 'react-paypal-express-checkout';
@@ -36,9 +37,14 @@ class Form extends React.Component {
                 is_gift: false,
                 gift_name: "",
                 gift_email: "",
+                stripe_token: null,
             },
+            response: {bankReference: null},
             referralSources: [],
-            partnerCharities: []
+            partnerCharities: [],
+            submitError: false,
+            submitErrorMessage: '',
+            submitErrorClass: '',
         };
         console.log(this.apiService);
         this.getCharities();
@@ -52,6 +58,7 @@ class Form extends React.Component {
         this.handleAllocation = this.handleAllocation.bind(this);
         this.handleStripeSubmit = this.handleStripeSubmit.bind(this);
         this.handleBankTransferSubmit = this.handleBankTransferSubmit.bind(this);
+        this.handlePaypalCancel = this.handlePaypalCancel.bind(this);
     }
 
     getCharities() {
@@ -129,8 +136,20 @@ class Form extends React.Component {
         } else {
             total += this.state.donation.amount
         }
-        total += this.state.donation.contribute ? this.state.donation.contribution : 0
+        total += this.state.donation.contribute ? this.state.donation.contribution : 0;
         return total
+    }
+
+    CharityText() {
+        // if (this.state.donation.allocate) {
+        //     for (var slug_id in this.state.donation.allocation) {
+        //         total += this.state.donation.allocation[slug_id];
+        //     }
+        // } else {
+        //     total += this.state.donation.amount
+        // }
+        // total += this.state.donation.contribute ? this.state.donation.contribution : 0;
+        // return total
     }
 
     submitButtonText() {
@@ -152,7 +171,8 @@ class Form extends React.Component {
     }
 
     handleStripeSubmit(token) {
-        console.log(token);
+        this.handleInputBase('stripe_token', token);
+        console.log(this.apiService.submit(this.state.donation));
         // let response = await fetch("/charge", {
         //     method: "POST",
         //     headers: {"Content-Type": "text/plain"},
@@ -160,6 +180,14 @@ class Form extends React.Component {
         // });
         //
         // if (response.ok) alert("Purchase Complete!");
+    }
+
+    handlePaypalCancel() {
+        this.setState({
+            submitError: true,
+            submitErrorMessage: "It looks like you didn't complete the Paypal transaction",
+            submitErrorClass: "warning"
+        });
     }
 
     handleBankTransferSubmit() {
@@ -175,195 +203,216 @@ class Form extends React.Component {
 
     render() {
         return (
-            <form className="container" onSubmit={this.handleFormSubmit}>
-                <div className="panel">
-                    <legend>Donation Details</legend>
-                    <ButtonGroup
-                        title={"How often will you be donating?"}
-                        name={"recurring"}
-                        value={this.state.donation.frequency}
-                        handleChange={this.handleInputBoolean}
-                        options={[
-                            {id: false, value: "One-Time"},
-                            {id: true, value: "Monthly"}]}
-                    />
-                    <ButtonGroup
-                        title={"How would you like to allocate your donation?"}
-                        name={"allocate"}
-                        value={this.state.donation.allocate}
-                        handleChange={this.handleInputBoolean}
-                        helptext={"We would love to allocate your donation for you!"}
-                        options={[
-                            {id: false, value: "Where it's needed most"},
-                            {id: true, value: "I want to choose"}]}
-                    />
-                    <ControlLabel>How much would you like to donate?</ControlLabel>
-                    <Collapse in={this.state.donation.allocate}>
-                        <div>
-                            {this.state.partnerCharities.map(partner => {
-                                return (
-                                    <CurrencyInput
-                                        className={"input-group-addon charity-name"}
-                                        name={partner.slug_id}
-                                        label={partner.value}
-                                        value={this.state.donation.allocation[partner.slug_id]}
-                                        handleChange={this.handleAllocation}
-                                    />
-                                )
-                            })}
-                        </div>
-                    </Collapse>
-                    {this.state.donation.allocate ? null :
-                        <div>
-                            <CurrencyInput
-                                title={"How much would you like to donate?"}
-                                name={"amount"}
-                                label={"$"}
-                                value={this.state.donation.amount}
-                                handleChange={this.handleInputCurrency}
-                            />
-                        </div>
-                    }
-                    <CheckBox
-                        title={"I would also like to contribute to covering Effective Altruism Australia's running costs"}
-                        name={"contribute"}
-                        value={this.state.donation.contribute}
-                        handleChange={this.handleInputCheckBox}
-                    />
-                    <Collapse in={this.state.donation.contribute}>
-                        <div>
-                            <CurrencyInput
-                                name={"contribution"}
-                                label={"$"}
-                                value={this.state.donation.contribution}
-                                handleChange={this.handleInputCurrency}
-                                helptext={"Thank you! These funds will help cover our administrative and operations costs. " +
-                                "As we are not-for-profit organisation, any excess donations will be granted to our partner charities."}
-                            />
-                        </div>
-                    </Collapse>
-                    <legend></legend>
-                    <CurrencyInput
-                        readOnly={true}
-                        label={"Total"}
-                        value={this.totalDonation()}
-                    />
-
-                </div>
-
-                <div className="panel">
-                    <legend>Donor Details</legend>
-                    <Input
-                        inputType={"text"}
-                        title={"Full Name"}
-                        name={"name"}
-                        value={this.state.donation.name}
-                        placeholder={"Enter your name"}
-                        handleChange={this.handleInput}
-                        validationState={this.validateLength}
-                        helptext={"Help text goes here"}
-                    />
-                    <Input
-                        inputType={"text"}
-                        title={"Email Address"}
-                        name={"email"}
-                        value={this.state.donation.email}
-                        placeholder={"Enter your email address"}
-                        handleChange={this.handleInput}
-                        validationState={this.validateEmail}
-                        helptext={"Help text goes here"}
-                    />
-                    <Select
-                        inputType={"text"}
-                        title={"Where did you hear about us?"}
-                        name={"referralSource"}
-                        value={this.state.donation.referralSource}
-                        handleChange={this.handleInputInteger}
-                        options={this.state.referralSources}
-                    />
-                    <CheckBox
-                        title={"Send me news and updates"}
-                        name={"subscribe"}
-                        value={this.state.donation.subscribe}
-                        handleChange={this.handleInputCheckBox}
-                    />
-                </div>
-
-                <div className="panel">
-                    <legend>Gift details</legend>
-                    <CheckBox
-                        title={"Are you making this donation as a gift to someone?"}
-                        name={"is_gift"}
-                        value={this.state.donation.is_gift}
-                        handleChange={this.handleInputCheckBox}
-                    />
-                    <Collapse in={this.state.donation.is_gift}>
-                        <div>
-                            <Input
-                                inputType={"text"}
-                                title={"Recipient Name"}
-                                name={"gift_name"}
-                                value={this.state.donation.gift_name}
-                                placeholder={"Enter recipient name"}
-                                handleChange={this.handleInput}
-                                validationState={this.validateLength}
-                            />
-                            <Input
-                                inputType={"text"}
-                                title={"Recipient Email Address"}
-                                name={"gift_email"}
-                                value={this.state.donation.gift_email}
-                                placeholder={"Enter recipient email address"}
-                                handleChange={this.handleInput}
-                                validationState={this.validateEmail}
-                            />
-                        </div>
-                    </Collapse>
-
-                </div>
-
-
-                <div className="panel">
-                    <legend>Payment Details</legend>
-                    <ButtonGroup
-                        title={"How would you like pay?"}
-                        name={"paymentMethod"}
-                        value={this.state.donation.paymentMethod}
-                        handleChange={this.handleInput}
-                        options={[
-                            {id: 'credit-card', value: "Credit Card"},
-                            {id: 'paypal', value: "PayPal"},
-                            {id: 'bank-transfer', value: "Bank Transfer"},
-                        ]}
-                    />
-                    <Collapse in={this.state.donation.paymentMethod === 'credit-card'}>
-                        <div>
-                            <Elements>
-                                <StripeCheckout
-                                    name={this.state.donation.name}
-                                    handleSubmit={this.handleStripeSubmit}
-                                    buttonText={this.submitButtonText()}
+            <div>
+                <form className="container" onSubmit={this.handleFormSubmit}>
+                    <div className="panel">
+                        <legend>Donation Details</legend>
+                        <ButtonGroup
+                            title={"How often will you be donating?"}
+                            name={"recurring"}
+                            value={this.state.donation.frequency}
+                            handleChange={this.handleInputBoolean}
+                            options={{
+                                false: "One-Time",
+                                true: "Monthly"
+                            }}
+                        />
+                        <ButtonGroup
+                            title={"How would you like to allocate your donation?"}
+                            name={"allocate"}
+                            value={this.state.donation.allocate}
+                            handleChange={this.handleInputBoolean}
+                            helptext={"We would love to allocate your donation for you!"}
+                            options={{
+                                false: "Where it's needed most",
+                                true: "I want to choose"
+                            }}
+                        />
+                        <ControlLabel>How much would you like to donate?</ControlLabel>
+                        <Collapse in={this.state.donation.allocate}>
+                            <div>
+                                {this.state.partnerCharities.map(partner => {
+                                    return (
+                                        <CurrencyInput
+                                            className={"input-group-addon charity-name"}
+                                            name={partner.id}
+                                            label={partner.value}
+                                            value={this.state.donation.allocation[partner.id]}
+                                            handleChange={this.handleAllocation}
+                                        />
+                                    )
+                                })}
+                            </div>
+                        </Collapse>
+                        {this.state.donation.allocate ? null :
+                            <div>
+                                <CurrencyInput
+                                    title={"How much would you like to donate?"}
+                                    name={"amount"}
+                                    label={"$"}
+                                    value={this.state.donation.amount}
+                                    handleChange={this.handleInputCurrency}
                                 />
-                            </Elements>
-                        </div>
-                    </Collapse>
-                    <Collapse in={this.state.donation.paymentMethod === 'paypal'}>
-                        <div>
-                            <PaypalExpressBtn
-                                client={{sandbox: 'AYMCgsY1DjnrVJzUw-se_NOGW8tUKW93nUOHzHOtPTPGSNxxSL8FIYwBaCG0Ul7kGZwIFDDWBSP5os2b'}}
-                                total={this.totalDonation()}
-                                currency='AUD'
-                            />
-                        </div>
-                    </Collapse>
-                    <Collapse in={this.state.donation.paymentMethod === 'bank-transfer'}>
-                        <div>
-                            <Button bsStyle={"success"}
-                                    onClick={this.handleBankTransferSubmit}>{this.submitButtonText()}</Button>
-                        </div>
-                    </Collapse>
-                </div>
-            </form>
+                            </div>
+                        }
+                        <CheckBox
+                            title={"I would also like to contribute to covering Effective Altruism Australia's running costs"}
+                            name={"contribute"}
+                            value={this.state.donation.contribute}
+                            handleChange={this.handleInputCheckBox}
+                        />
+                        <Collapse in={this.state.donation.contribute}>
+                            <div>
+                                <CurrencyInput
+                                    name={"contribution"}
+                                    label={"$"}
+                                    value={this.state.donation.contribution}
+                                    handleChange={this.handleInputCurrency}
+                                    helptext={"Thank you! These funds will help cover our administrative and operations costs. " +
+                                    "As we are not-for-profit organisation, any excess donations will be granted to our partner charities."}
+                                />
+                            </div>
+                        </Collapse>
+                        <legend></legend>
+                        <CurrencyInput
+                            readOnly={true}
+                            label={"Total"}
+                            value={this.totalDonation()}
+                        />
+
+                    </div>
+
+                    <div className="panel">
+                        <legend>Donor Details</legend>
+                        <Input
+                            inputType={"text"}
+                            title={"Full Name"}
+                            name={"name"}
+                            value={this.state.donation.name}
+                            placeholder={"Enter your name"}
+                            handleChange={this.handleInput}
+                            validationState={this.validateLength}
+                            helptext={"Help text goes here"}
+                        />
+                        <Input
+                            inputType={"text"}
+                            title={"Email Address"}
+                            name={"email"}
+                            value={this.state.donation.email}
+                            placeholder={"Enter your email address"}
+                            handleChange={this.handleInput}
+                            validationState={this.validateEmail}
+                            helptext={"Help text goes here"}
+                        />
+                        <Select
+                            inputType={"text"}
+                            title={"Where did you hear about us?"}
+                            name={"referralSource"}
+                            value={this.state.donation.referralSource}
+                            handleChange={this.handleInputInteger}
+                            options={this.state.referralSources}
+                        />
+                        <CheckBox
+                            title={"Send me news and updates"}
+                            name={"subscribe"}
+                            value={this.state.donation.subscribe}
+                            handleChange={this.handleInputCheckBox}
+                        />
+                    </div>
+
+                    <div className="panel">
+                        <legend>Gift details</legend>
+                        <CheckBox
+                            title={"Are you making this donation as a gift to someone?"}
+                            name={"is_gift"}
+                            value={this.state.donation.is_gift}
+                            handleChange={this.handleInputCheckBox}
+                        />
+                        <Collapse in={this.state.donation.is_gift}>
+                            <div>
+                                <Input
+                                    inputType={"text"}
+                                    title={"Recipient Name"}
+                                    name={"gift_name"}
+                                    value={this.state.donation.gift_name}
+                                    placeholder={"Enter recipient name"}
+                                    handleChange={this.handleInput}
+                                    validationState={this.validateLength}
+                                />
+                                <Input
+                                    inputType={"text"}
+                                    title={"Recipient Email Address"}
+                                    name={"gift_email"}
+                                    value={this.state.donation.gift_email}
+                                    placeholder={"Enter recipient email address"}
+                                    handleChange={this.handleInput}
+                                    validationState={this.validateEmail}
+                                />
+                            </div>
+                        </Collapse>
+
+                    </div>
+
+
+                    <div className="panel">
+                        <legend>Payment Details</legend>
+                        <ButtonGroup
+                            title={"How would you like pay?"}
+                            name={"paymentMethod"}
+                            value={this.state.donation.paymentMethod}
+                            handleChange={this.handleInput}
+                            options={{
+                                'credit-card': 'Credit Card',
+                                'paypal': 'Paypal',
+                                'bank-transfer': 'Bank Transfer'
+                            }}
+                        />
+                        <Collapse in={this.state.donation.paymentMethod === 'credit-card'}>
+                            <div>
+                                <Elements>
+                                    <StripeCheckout
+                                        name={this.state.donation.name}
+                                        handleSubmit={this.handleStripeSubmit}
+                                        buttonText={this.submitButtonText()}
+                                    />
+                                </Elements>
+                            </div>
+                        </Collapse>
+                        <Collapse in={this.state.donation.paymentMethod === 'paypal'}>
+                            <div>
+                                <PaypalExpressBtn
+                                    client={{sandbox: 'AYMCgsY1DjnrVJzUw-se_NOGW8tUKW93nUOHzHOtPTPGSNxxSL8FIYwBaCG0Ul7kGZwIFDDWBSP5os2b'}}
+                                    total={this.totalDonation()}
+                                    currency='AUD'
+                                    onSuccess=''
+                                    onCancel={this.handlePaypalCancel}
+                                    onError={this.handlePaypalCancel}
+                                />
+                            </div>
+                        </Collapse>
+                        <Collapse in={this.state.donation.paymentMethod === 'bank-transfer'}>
+                            <div>
+                                <Button bsStyle={"success"}
+                                        onClick={this.handleBankTransferSubmit}>{this.submitButtonText()}</Button>
+                            </div>
+                        </Collapse>
+                        {this.state.submitError ?
+                            <div>
+                                <Alert bsStyle={this.state.submitErrorClass}>
+                                    <strong>Holy guacamole!</strong> {this.state.submitErrorMessage}
+                                </Alert>
+                            </div> :
+                            null}
+                    </div>
+                </form>
+                <Result
+                    name={this.state.donation.name}
+                    total={this.totalDonation()}
+                    paymentMethod={this.state.donation.paymentMethod}
+                    recurring={this.state.donation.recurring}
+                    bankReference={this.state.response.bankReference}
+                />
+            </div>
         );
     }
 }

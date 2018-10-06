@@ -2,6 +2,7 @@ import React from "react";
 import {ButtonToolbar, ControlLabel, FormGroup, HelpBlock, ToggleButton, ToggleButtonGroup} from 'react-bootstrap';
 
 const ButtonGroup = props => {
+    console.log(props);
     return (
         <FormGroup controlId="formBasicText"
                    validationState={props.validationState}
@@ -10,11 +11,12 @@ const ButtonGroup = props => {
             <ButtonToolbar>
                 <ToggleButtonGroup type="radio" name={props.name} bsSize={props.size} value={props.value}
                                    handleChange={props.handleChange}>
-                    {props.options.map(option => {
-                        return (
-                            <ToggleButton onChange={props.handleChange} value={option.id} >{option.value}</ToggleButton>
-                        );
-                    })}
+                    {
+                        Object.keys(props.options).map((key, index) => {
+                                return <ToggleButton value={key}>{props.options[key]}</ToggleButton>
+                            }
+                        )
+                    }
                 </ToggleButtonGroup>
             </ButtonToolbar>
             <HelpBlock>{props.helptext}</HelpBlock>

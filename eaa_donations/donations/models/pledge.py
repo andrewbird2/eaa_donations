@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 import random
 import string
@@ -30,12 +29,6 @@ class Pledge(models.Model):
     recurring = models.BooleanField()
     how_did_you_hear_about_us_db = models.ForeignKey(ReferralSource, blank=True, null=True, on_delete=models.PROTECT,
                                                      verbose_name='How did you hear about us?')
-
-    is_gift = models.BooleanField(default=False)
-    gift_recipient_name = models.CharField(max_length=100, blank=True, null=True)
-    gift_recipient_email = models.EmailField(blank=True, null=True)
-    gift_personal_message = models.TextField(blank=True, null=True)
-    gift_message_sent = models.BooleanField(default=False)
 
     @property
     def amount(self):

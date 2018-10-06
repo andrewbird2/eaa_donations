@@ -14,17 +14,16 @@ export default class APIService {
     }
 
     submit(data) {
-
-        // return fetch('/pledge/', {
-        //     method: 'POST',
-        //     headers: {
-        //         'Accept': 'application/json',
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify(pledge_clean)
-        // }).then(function (response) {
-        //     return response.json();
-        // });
+        return fetch('/donations/pledge/', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        }).then(function (response) {
+            return response.json();
+        });
     }
 }
 
