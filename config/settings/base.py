@@ -65,8 +65,6 @@ THIRD_PARTY_APPS = [
     'crispy_forms',
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',
-    'djstripe',
     'rest_framework',
 ]
 LOCAL_APPS = [
@@ -266,7 +264,7 @@ CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 # STRIPE_TEST_SECRET_KEY = env("STRIPE_TEST_SECRET_KEY", "sk_test_ASFtCKuzcUnm3zkjl34WCGqK")
 STRIPE_TEST_PUBLIC_KEY = "pk_test_LqCqBrL45H2muETuFyi5QKRH"
 STRIPE_TEST_SECRET_KEY = "sk_test_ASFtCKuzcUnm3zkjl34WCGqK"
-
+#
 STRIPE_LIVE_MODE = False
 
 REST_FRAMEWORK = {

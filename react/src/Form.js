@@ -26,14 +26,14 @@ class Form extends React.Component {
                 name: "",
                 email: "",
                 referralSource: null,
-                recurring: null,
+                recurring: "",
                 allocate: false,
                 allocation: {},
                 subscribe: false,
                 amount: null,
                 contribute: false,
                 contribution: null,
-                paymentMethod: null,
+                paymentMethod: "",
                 is_gift: false,
                 gift_name: "",
                 gift_email: "",
@@ -110,6 +110,7 @@ class Form extends React.Component {
     }
 
     handleInputBoolean(e) {
+        console.log(e.target.value);
         this.handleInputBase(e.target.name, e.target.value === "true");
     }
 
@@ -172,7 +173,9 @@ class Form extends React.Component {
 
     handleStripeSubmit(token) {
         this.handleInputBase('stripe_token', token);
-        console.log(this.apiService.submit(this.state.donation));
+        this.apiService.submit(this.state.donation).then(function (response) {
+            console.log(response);
+        });
         // let response = await fetch("/charge", {
         //     method: "POST",
         //     headers: {"Content-Type": "text/plain"},
@@ -210,7 +213,7 @@ class Form extends React.Component {
                         <ButtonGroup
                             title={"How often will you be donating?"}
                             name={"recurring"}
-                            value={this.state.donation.frequency}
+                            value={this.state.donation.recurring}
                             handleChange={this.handleInputBoolean}
                             options={{
                                 false: "One-Time",

@@ -2,18 +2,18 @@ import React from "react";
 import {ButtonToolbar, ControlLabel, FormGroup, HelpBlock, ToggleButton, ToggleButtonGroup} from 'react-bootstrap';
 
 const ButtonGroup = props => {
-    console.log(props);
     return (
         <FormGroup controlId="formBasicText"
                    validationState={props.validationState}
         >
             <ControlLabel>{props.title}</ControlLabel>
             <ButtonToolbar>
-                <ToggleButtonGroup type="radio" name={props.name} bsSize={props.size} value={props.value}
-                                   handleChange={props.handleChange}>
+                <ToggleButtonGroup type="radio" name={props.name}
+                                   bsSize={props.size}
+                                   value={props.value.toString()}>
                     {
                         Object.keys(props.options).map((key, index) => {
-                                return <ToggleButton value={key}>{props.options[key]}</ToggleButton>
+                                return <ToggleButton value={key} onChange={props.handleChange}>{props.options[key]}</ToggleButton>
                             }
                         )
                     }

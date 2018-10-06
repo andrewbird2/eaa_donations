@@ -40,9 +40,9 @@ raven = "*"
 django-storages = {version = "*", extras = ["boto3"]}
 django-anymail = {version = "*", extras = ["mailgun"]}
 Collectfast = "*"
-dj-stripe = "*"
 setuptools = "*"
 django-enumfields = "*"
+stripe = "*"
 
 [requires]
 python_version = "3.6"

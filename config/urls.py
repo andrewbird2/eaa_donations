@@ -12,7 +12,6 @@ urlpatterns = [
                       TemplateView.as_view(template_name="pages/about.html"),
                       name="about",
                   ),
-                  path("stripe/", include("djstripe.urls", namespace="djstripe")),
 
                   # Django Admin, use {% url 'admin:index' %}
                   path(settings.ADMIN_URL, admin.site.urls),
