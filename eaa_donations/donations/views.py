@@ -2,11 +2,15 @@ import json
 
 import stripe
 from django.conf import settings
-from django.http import HttpResponse
+from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
+
+from .forms import PledgeForm, PledgeComponentFormSet
+from .models import PaymentMethod
 
 stripe.api_key = settings.STRIPE_TEST_SECRET_KEY
 stripe.log = 'info'
@@ -23,8 +27,31 @@ class PledgeView(View):
 
     def post(self, request):
         body = json.loads(request.body.decode('utf-8'))
+        print(body)
+        pledge_form = PledgeForm(body)
+        pledge_form.save()
+        component_formset = PledgeComponentFormSet(body)
+
+        if not (pledge_form.is_valid() and component_formset.is_valid()):
+            print([pledge_form.errors] + component_formset.errors)
+            return JsonResponse({
+                'error_message': [pledge_form.errors] + component_formset.errors
+            }, status=400)
+        with transaction.atomic():
+            pledge = pledge_form.save()
+            print(pledge)
+            for component in component_formset.forms:
+                component.instance.pledge = pledge
+            component_formset.save()
+
+        if pledge.payment_method is PaymentMethod.BANK:
+            pledge.generate_reference()
+            return JsonResponse({'bankReference': pledge.reference,
+                                 'success': True,
+                                 })
 
         try:
+            stripe.Subscription.create()
             print(body)
             charge = stripe.Charge.create(
                 amount=body['amount'] * 100,
@@ -36,8 +63,8 @@ class PledgeView(View):
             )
             print(charge.__dict__)
             if charge['status'] == 'succeeded':
-                return HttpResponse(json.dumps(
-                    {'message': 'Your transaction has been successful.'})
+                return JsonResponse(
+                    {'success': True}
                 )
             else:
                 raise stripe.error.CardError
@@ -45,23 +72,27 @@ class PledgeView(View):
         except stripe.error.CardError as e:
             body = e.json_body
             err = body.get('error', {})
-            return HttpResponse(
-                json.dumps({"message": err.get('message')}),
-                status=e.http_status
+            return JsonResponse(
+                {'success': False,
+                 'errorMessage': err.get('message')}
             )
+
         except stripe.error.RateLimitError as e:
             # Too many requests made to the API too quickly
-            return HttpResponse(json.dumps({
-                'message': "The API was not able to respond, try again."
-            }))
+            return JsonResponse(
+                {'success': False,
+                 'errorMessage': 'Too many requests!'}
+            )
         except stripe.error.InvalidRequestError as e:
             # invalid parameters were supplied to Stripe's API
-            return HttpResponse(json.dumps({
-                'message': "Invalid parameters, unable to process payment."
-            }))
+            return JsonResponse(
+                {'success': False,
+                 'errorMessage': 'Encountered a problem.'}
+            )
         # Something else happened, completely unrelated to Stripe
         except Exception as e:
             print(e, 1)
-            return HttpResponse(json.dumps({
-                'message': 'Unable to process payment, try again.'
-            }))
+            return JsonResponse(
+                {'success': False,
+                 'errorMessage': 'Encountered a problem.'}
+            )

@@ -13,7 +13,24 @@ export default class APIService {
         });
     }
 
-    submit(data) {
+    submit(raw_data) {
+        let data = JSON.parse(JSON.stringify(raw_data));
+        if (!data.allocate) {
+            data.allocation['unallocated'] = data.amount;
+        }
+        if (data.contribute) {
+            data.allocation['eaa'] = data.contribution;
+        }
+
+        Object.keys(data.allocation).map((key, i) => {
+            data['form-' + i + '-id'] = null; // This tells Django that the object doesn't already exist
+            data['form-' + i + '-partner_charity'] = key;
+            data['form-' + i + '-amount'] = data.allocation[key];
+        });
+
+        data['form-TOTAL_FORMS'] = Object.keys(data.allocation).length;
+        data['form-INITIAL_FORMS'] = 0;
+
         return fetch('/donations/pledge/', {
             method: 'POST',
             headers: {

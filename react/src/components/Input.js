@@ -11,6 +11,7 @@ const Input = props => {
                 value={props.value}
                 onChange={props.handleChange}
                 placeholder={props.placeholder}
+                componentClass={props.componentClass}
                 {...props}
             />
             <FormControl.Feedback/>

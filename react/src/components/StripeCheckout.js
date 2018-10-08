@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {CardElement, injectStripe} from 'react-stripe-elements';
-import {Button} from 'react-bootstrap';
+import Submit from './Submit'
 
 class StripeCheckout extends Component {
     constructor(props) {
@@ -9,8 +9,7 @@ class StripeCheckout extends Component {
     }
 
     async submit() {
-        let token = await this.props.stripe.createToken({name: this.props.name});
-        this.props.handleSubmit(token);
+        this.props.handleSubmit(this.props.stripe);
     }
 
     render() {
@@ -18,7 +17,11 @@ class StripeCheckout extends Component {
             <div className="checkout">
                 <CardElement style={{base: {fontSize: '16px'}}}/>
                 <br/>
-                <Button bsStyle={"success"} onClick={this.submit}>{this.props.buttonText}</Button>
+                <Submit
+                    onClick={this.submit}
+                    label={this.props.label}
+                    disabled={this.props.disabled}
+                />
             </div>
         );
     }

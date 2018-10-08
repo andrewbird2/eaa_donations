@@ -6,7 +6,7 @@ from .pledge import Pledge, PledgeComponent
 class Donation(models.Model):
     datetime = models.DateTimeField()
     reference = models.TextField(blank=True)
-    pledge = models.ForeignKey(Pledge, blank=True, null=True)
+    pledge = models.ForeignKey(Pledge, blank=True, null=True, on_delete=models.PROTECT)
 
     @property
     def amount(self):
@@ -25,8 +25,8 @@ class Donation(models.Model):
 
 class DonationComponent(models.Model):
     """Tracks the breakdown of a donation between partner charities"""
-    pledge_component = models.ForeignKey(PledgeComponent)
-    donation = models.ForeignKey(Donation, related_name='components')
+    pledge_component = models.ForeignKey(PledgeComponent, on_delete=models.CASCADE)
+    donation = models.ForeignKey(Donation, related_name='components', on_delete=models.CASCADE)
     amount = models.FloatField()
     fees = models.FloatField()
 

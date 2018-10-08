@@ -9,7 +9,7 @@ class Result extends Component {
         return (
             <div>
                 {
-                    this.props.paymentMethod === 'credit-card' &&
+                    this.props.payment_method === 'credit-card' &&
                     (<div className="payment_option">
                         <h2>Thank you {this.props.name}!</h2>
                         <p>
@@ -35,7 +35,7 @@ class Result extends Component {
                     </div>)
                 }
                 {
-                    this.props.paymentMethod === 'bank-transfer' &&
+                    this.props.payment_method === 'bank-transfer' &&
                     <div className="payment_option">
                         <h2>Thank you {this.props.name}!</h2>
                         <p>
@@ -59,7 +59,7 @@ class Result extends Component {
                                 fit)<br/>
                                 <strong>BSB</strong>: 083170<br/>
                                 <strong>Account No</strong>: 306556167<br/>
-                                <strong>Unique Reference Number</strong>: {this.props.bank_reference} (put in the
+                                <strong>Unique Reference Number</strong>: {this.props.bankReference} (put in the
                                 transaction description)
                             </p>
                         </div>

@@ -1,4 +1,3 @@
-
 import random
 import string
 
@@ -24,11 +23,11 @@ class Pledge(models.Model):
     reference = models.TextField(blank=True)
     name = models.CharField(max_length=100, blank=True, verbose_name='name')
     email = models.EmailField()
-    subscribe_to_updates = models.BooleanField(default=False, verbose_name='Send me news and updates')
+    subscribe = models.BooleanField(default=False, verbose_name='Send me news and updates')
     payment_method = EnumIntegerField(PaymentMethod)
     recurring = models.BooleanField()
-    how_did_you_hear_about_us_db = models.ForeignKey(ReferralSource, blank=True, null=True, on_delete=models.PROTECT,
-                                                     verbose_name='How did you hear about us?')
+    referral_source = models.ForeignKey(ReferralSource, blank=True, null=True, on_delete=models.PROTECT,
+                                        verbose_name='How did you hear about us?')
 
     @property
     def amount(self):
@@ -59,7 +58,7 @@ class Pledge(models.Model):
 
     def __str__(self):
         components = ', '.join([c.__unicode__() for c in self.components.all()])
-        return "Pledge of {1} by {0.first_name} {0.last_name}, " \
+        return "Pledge of {1} by {0.name}, " \
                "made on {2}. Reference {0.reference}".format(self, components, self.completed_time.date())
 
 
